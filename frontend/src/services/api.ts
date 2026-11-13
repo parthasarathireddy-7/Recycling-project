@@ -273,6 +273,10 @@ export const codeExplorerApi = {
   getFile: async (path: string) => {
     const res = await apiClient.get("/code/backend-file", { params: { path } });
     return res.data;
+  },
+  getSystemInfo: async () => {
+    const res = await apiClient.get("/code/system-info");
+    return res.data;
   }
 };
 

@@ -1,8 +1,16 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
 import os
+import sys
+import platform
+import time
 from typing import List, Dict, Any
+from sqlalchemy.orm import Session
+from app.database.session import get_db, engine
+from app.models import Vehicle, CollectionPoint, Route, MaterialCategory, RecyclingFacility
 
 router = APIRouter(prefix="/code", tags=["Backend Code Workspace"])
+
+SERVER_START_TIME = time.time()
 
 BASE_BACKEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
@@ -54,5 +62,40 @@ def get_backend_source_content(path: str = Query(...)):
         "filename": os.path.basename(path),
         "description": ALLOWED_FILES[path],
         "content": content
+    }
+
+@router.get("/system-info")
+def get_system_runtime_info(db: Session = Depends(get_db)):
+    db_name = engine.dialect.name
+    try:
+        vehicles_count = db.query(Vehicle).count()
+        points_count = db.query(CollectionPoint).count()
+        routes_count = db.query(Route).count()
+        materials_count = db.query(MaterialCategory).count()
+        facilities_count = db.query(RecyclingFacility).count()
+    except Exception as e:
+        vehicles_count = points_count = routes_count = materials_count = facilities_count = 0
+
+    uptime_seconds = int(time.time() - SERVER_START_TIME)
+
+    return {
+        "status": "Online",
+        "database_engine": db_name.upper(),
+        "database_url": str(engine.url).split("@")[-1] if "@" in str(engine.url) else str(engine.url),
+        "python_version": platform.python_version(),
+        "platform": f"{platform.system()} {platform.release()}",
+        "uptime_seconds": uptime_seconds,
+        "counts": {
+            "vehicles": vehicles_count,
+            "collection_points": points_count,
+            "routes": routes_count,
+            "material_categories": materials_count,
+            "facilities": facilities_count
+        },
+        "supported_algorithms": [
+            {"name": "Dijkstra's Algorithm", "complexity": "O((V + E) log V)", "type": "Exact Shortest Path"},
+            {"name": "A* Search Algorithm", "complexity": "O(E)", "type": "Heuristic (Admissible Haversine)"},
+            {"name": "2-Opt TSP Heuristic", "complexity": "O(N²)", "type": "Combinatorial Tour Optimization"}
+        ]
     }
 
