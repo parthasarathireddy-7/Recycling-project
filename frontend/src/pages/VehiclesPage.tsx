@@ -206,7 +206,25 @@ export const VehiclesPage: React.FC = () => {
       </div>
 
       {/* Fleet Cards Grid */}
-      {loading ? (
+      {error ? (
+        <div className="p-6 bg-red-50 rounded-3xl border border-red-200 text-red-900 max-w-xl mx-auto my-8">
+          <div className="flex items-center gap-3">
+            <AlertTriangle className="w-6 h-6 text-red-600 shrink-0" />
+            <div>
+              <h3 className="font-bold text-base">Backend Connection Notice</h3>
+              <p className="text-xs text-red-700 mt-1">
+                {error} Ensure your FastAPI backend server is running and accessible at <code>{import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api/v1"}</code>.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={fetchFleetData}
+            className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2"
+          >
+            <RefreshCw className="w-3.5 h-3.5" /> Retry Connection
+          </button>
+        </div>
+      ) : loading ? (
         <div className="p-12 text-center text-xs text-gray-500 flex flex-col items-center gap-2">
           <RefreshCw className="w-6 h-6 text-red-600 animate-spin" />
           <span>Loading fleet data...</span>
