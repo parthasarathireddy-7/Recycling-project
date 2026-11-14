@@ -4,7 +4,7 @@ import {
   Bell, Recycle, Truck, CheckCircle2, AlertCircle,
   LogOut, User as UserIcon, RefreshCw, ChevronDown
 } from "lucide-react";
-import { notificationsApi, authApi } from "../services/api";
+import { notificationsApi, authApi, checkBackendStatus, isBackendConnected } from "../services/api";
 import { NotificationItem } from "../types";
 
 interface NavbarProps {
@@ -17,10 +17,13 @@ export const Navbar: React.FC<NavbarProps> = ({ onRefreshData, isRefreshing = fa
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [backendLive, setBackendLive] = useState(false);
   const currentUser = authApi.getCurrentUser() || { name: "Alex Turner", role: "Administrator", email: "admin@recycling.org" };
 
   const fetchNotifs = async () => {
     try {
+      const isLive = await checkBackendStatus();
+      setBackendLive(isLive);
       const data = await notificationsApi.getAll();
       setNotifications(data);
     } catch (err) {
@@ -85,9 +88,13 @@ export const Navbar: React.FC<NavbarProps> = ({ onRefreshData, isRefreshing = fa
           )}
 
           {/* System Status Pill */}
-          <div className="hidden lg:flex items-center gap-1.5 px-3 py-1 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-medium rounded-full">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span>REST API Active</span>
+          <div className={`hidden lg:flex items-center gap-1.5 px-3 py-1 border text-xs font-medium rounded-full ${
+            backendLive
+              ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+              : "bg-blue-50 border-blue-200 text-blue-700"
+          }`}>
+            <span className={`w-2 h-2 rounded-full ${backendLive ? "bg-emerald-500 animate-pulse" : "bg-blue-500"}`}></span>
+            <span>{backendLive ? "FastAPI Live" : "Cloud Demo Engine"}</span>
           </div>
 
           {/* Notifications Bell */}
